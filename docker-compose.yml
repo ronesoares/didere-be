@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_ADMIN_URL=${DATABASE_ADMIN_URL}
+      - DATABASE_FILES_URL=${DATABASE_FILES_URL}
+      - DATABASE_DIDERE_URL=${DATABASE_DIDERE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN}
+      - FTP_SERVER=${FTP_SERVER}
+      - FTP_USER=${FTP_USER}
+      - FTP_PASSWORD=${FTP_PASSWORD}
+      - FTP_LOCAL_PATH=${FTP_LOCAL_PATH}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT_OUT=${SMTP_PORT_OUT}
+      - SMTP_PORT_IN=${SMTP_PORT_IN}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - GOOGLE_API_TOKEN_INFO_URL=${GOOGLE_API_TOKEN_INFO_URL}
+      - GOOGLE_APPLICATION_NAME=${GOOGLE_APPLICATION_NAME}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+    volumes:
+      - .:/app
+      - /app/node_modules
+    restart: unless-stopped
+

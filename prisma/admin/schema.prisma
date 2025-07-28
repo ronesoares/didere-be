@@ -1,0 +1,114 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../node_modules/@prisma/client/admin"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_ADMIN_URL")
+}
+
+model System {
+  id       Int      @id @default(autoincrement())
+  name     String   @db.VarChar(45)
+  modules  Module[]
+  sellers  Seller[]
+  owners   Owner[]
+}
+
+model Module {
+  id       Int      @id @default(autoincrement())
+  name     String   @db.VarChar(45)
+  idSystem Int
+  system   System   @relation(fields: [idSystem], references: [id])
+  accesses Access[]
+}
+
+model Seller {
+  id                  Int      @id @default(autoincrement())
+  name                String   @db.VarChar(60)
+  token               String   @unique @db.VarChar(6)
+  status              String   @db.VarChar(1)
+  commissionPercentage Decimal  @db.Decimal(18, 2)
+  idSystem            Int
+  system              System   @relation(fields: [idSystem], references: [id])
+  owners              Owner[]
+}
+
+model Owner {
+  id                  Int      @id @default(autoincrement())
+  name                String   @db.VarChar(60)
+  nickname            String?  @db.VarChar(30)
+  phoneOption1        String?  @db.VarChar(12)
+  phoneOption2        String?  @db.VarChar(12)
+  email               String   @db.VarChar(50)
+  document            String?  @db.VarChar(15)
+  birthday            DateTime? @db.Date
+  tokenSeller         String?  @db.VarChar(6)
+  idAddress           Int? // This will be linked to the Address table in Didere DB
+  idSystem            Int
+  system              System   @relation(fields: [idSystem], references: [id])
+  seller              Seller?  @relation(fields: [tokenSeller], references: [token])
+  profiles            Profile[]
+  users               User[]
+}
+
+model Profile {
+  id                  Int      @id @default(autoincrement())
+  name                String   @db.VarChar(45)
+  idOwner             Int? // This will be linked to the Owner table
+  idUserRegistration  Int? // This will be linked to the User table
+  idUserLastUpdated   Int? // This will be linked to the User table
+  owner               Owner?   @relation(fields: [idOwner], references: [id])
+  userRegistration    User? @relation("Profile_userRegistration", fields: [idUserRegistration], references: [id])
+  userLastUpdated     User? @relation("Profile_userLastUpdated", fields: [idUserLastUpdated], references: [id])
+  accesses            Access[]
+  users               User[]   @relation("ProfileToUser")
+}
+
+model User {
+  id                                  Int      @id @default(autoincrement())
+  name                                String   @db.VarChar(60)
+  login                               String   @unique @db.VarChar(50)
+  password                            String   @db.VarChar(1000)
+  beforePassword                      String?  @db.VarChar(1000)
+  status                              String   @db.VarChar(1)
+  creationDate                        DateTime @db.Date
+  loginAttemptQuantity                Int      @default(0)
+  dateOfLastLoginAttempt              DateTime? @db.Date
+  isUserOwner                         String   @default("N") @db.VarChar(1)
+  tokenGoogle                         String?  @db.VarChar(2000)
+  refreshToken                        String?  @db.VarChar(2000)
+  idProfile                           Int
+  idOwner                             Int
+  idUserRegistration                  Int? // Self-referencing
+  idUserLastUpdated                   Int? // Self-referencing
+  profile                             Profile  @relation("ProfileToUser", fields: [idProfile], references: [id])
+  owner                               Owner    @relation(fields: [idOwner], references: [id])
+  userRegistration                    User?    @relation("User_userRegistration", fields: [idUserRegistration], references: [id])
+  userLastUpdated                     User?    @relation("User_userLastUpdated", fields: [idUserLastUpdated], references: [id])
+  createdProfiles                     Profile[] @relation("Profile_userRegistration")
+  updatedProfiles                     Profile[] @relation("Profile_userLastUpdated")
+  createdUsers                        User[]    @relation("User_userRegistration")
+  updatedUsers                        User[]    @relation("User_userLastUpdated")
+}
+
+model Access {
+  id        Int      @id @default(autoincrement())
+  insert    String   @default("Y") @db.VarChar(1)
+  update    String   @default("Y") @db.VarChar(1)
+  delete    String   @default("Y") @db.VarChar(1)
+  search    String   @default("Y") @db.VarChar(1)
+  idModule  Int
+  idProfile Int
+  module    Module   @relation(fields: [idModule], references: [id])
+  profile   Profile  @relation(fields: [idProfile], references: [id])
+}
+
+model SystemParameter {
+  id    Int     @id @default(autoincrement())
+  name  String  @db.VarChar(100)
+  value String? @db.VarChar(100)
+}
+
+

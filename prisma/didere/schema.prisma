@@ -1,0 +1,147 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../node_modules/@prisma/client/didere"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_DIDERE_URL")
+}
+
+model State {
+  id           Int       @id
+  name         String    @db.VarChar(45)
+  abbreviation String    @db.VarChar(2)
+  cities       City[]
+  addresses    Address[]
+}
+
+model City {
+  id      Int       @id
+  name    String    @db.VarChar(60)
+  idState Int
+  state   State     @relation(fields: [idState], references: [id])
+  addresses Address[]
+}
+
+model Address {
+  id           Int        @id @default(autoincrement())
+  zipCode      String     @db.VarChar(10)
+  name         String     @db.VarChar(60)
+  neighborhood String     @db.VarChar(60)
+  number       Int?
+  complement   String?    @db.VarChar(100)
+  idCity       Int
+  idState      Int
+  city         City       @relation(fields: [idCity], references: [id])
+  state        State      @relation(fields: [idState], references: [id])
+  locators     Locator[]
+  properties   Property[]
+  tenants      Tenant[]
+}
+
+model Locator {
+  id           Int       @id @default(autoincrement())
+  name         String    @db.VarChar(60)
+  nickname     String?   @db.VarChar(30)
+  phoneOption1 String?   @db.VarChar(12)
+  phoneOption2 String?   @db.VarChar(12)
+  email        String    @db.VarChar(50)
+  document     String?   @db.VarChar(15)
+  birthday     DateTime? @db.Date
+  idAddress    Int?
+  address      Address?  @relation(fields: [idAddress], references: [id])
+  properties   Property[]
+}
+
+model Feature {
+  id              Int               @id @default(autoincrement())
+  name            String            @db.VarChar(100)
+  description     String            @db.VarChar(500)
+  propertyFeatures PropertyFeature[]
+}
+
+model TypeActivity {
+  id                     Int                      @id @default(autoincrement())
+  name                   String                   @db.VarChar(100)
+  propertyTypeActivities PropertyTypeActivity[]
+}
+
+model Property {
+  id                     Int                      @id @default(autoincrement())
+  idLocator              Int
+  title                  String                   @db.VarChar(100)
+  description            String?                  @db.VarChar(4000)
+  idAddress              Int
+  height                 Decimal                  @db.Decimal(18, 2)
+  width                  Decimal                  @db.Decimal(18, 2)
+  depth                  Decimal                  @db.Decimal(18, 2)
+  mainPhoto              String?                  @db.LongText
+  periodicity            String                   @default("M") @db.VarChar(1)
+  value                  Decimal                  @db.Decimal(18, 2)
+  urlMaps                String?                  @db.VarChar(2000)
+  locator                Locator                  @relation(fields: [idLocator], references: [id])
+  address                Address                  @relation(fields: [idAddress], references: [id])
+  propertyFeatures       PropertyFeature[]
+  propertyTypeActivities PropertyTypeActivity[]
+  propertyRentalPeriods  PropertyRentalPeriod[]
+  claimForms             ClaimForm[]
+}
+
+model PropertyFeature {
+  id         Int      @id @default(autoincrement())
+  idProperty Int
+  idFeature  Int
+  property   Property @relation(fields: [idProperty], references: [id])
+  feature    Feature  @relation(fields: [idFeature], references: [id])
+}
+
+model PropertyTypeActivity {
+  id             Int          @id @default(autoincrement())
+  idProperty     Int
+  idTypeActivity Int
+  property       Property     @relation(fields: [idProperty], references: [id])
+  typeActivity   TypeActivity @relation(fields: [idTypeActivity], references: [id])
+}
+
+model PropertyRentalPeriod {
+  id         Int      @id @default(autoincrement())
+  idProperty Int
+  startDate  DateTime @db.Date
+  endDate    DateTime @db.Date
+  startHour  String   @default("00:00") @db.VarChar(5)
+  endHour    String   @default("23:59") @db.VarChar(5)
+  sunday     String   @default("Y") @db.VarChar(1)
+  monday     String   @default("Y") @db.VarChar(1)
+  tuesday    String   @default("Y") @db.VarChar(1)
+  wednesday  String   @default("Y") @db.VarChar(1)
+  thursday   String   @default("Y") @db.VarChar(1)
+  friday     String   @default("Y") @db.VarChar(1)
+  saturday   String   @default("Y") @db.VarChar(1)
+  property   Property @relation(fields: [idProperty], references: [id])
+}
+
+model Tenant {
+  id          Int       @id @default(autoincrement())
+  name        String    @db.VarChar(60)
+  phoneNumber String    @db.VarChar(12)
+  email       String    @db.VarChar(50)
+  document    String?   @db.VarChar(15)
+  birthday    DateTime? @db.Date
+  idAddress   Int?
+  address     Address?  @relation(fields: [idAddress], references: [id])
+}
+
+model ClaimForm {
+  id            Int       @id @default(autoincrement())
+  name          String    @db.VarChar(60)
+  phoneNumber   String    @db.VarChar(12)
+  email         String    @db.VarChar(50)
+  messageDetail String    @db.VarChar(1000)
+  creationDate  DateTime  @db.Date
+  source        String    @db.VarChar(7)
+  idProperty    Int?
+  property      Property? @relation(fields: [idProperty], references: [id])
+}
+
+

@@ -1,0 +1,39 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../node_modules/@prisma/client/files"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_FILES_URL")
+}
+
+model File {
+  id             Int      @id @default(autoincrement())
+  creationDate   DateTime @db.Date
+  name           String   @db.VarChar(100)
+  type           String   @db.VarChar(10)
+  size           Decimal  @db.Decimal(18, 2)
+  idModule       Int
+  idKeyModule    Int
+  idOwner        Int
+  idSystem       Int
+  idCreationUser Int
+  propertyFiles  PropertyFile[]
+  propertyPhotos PropertyPhoto[]
+}
+
+model PropertyFile {
+  id         Int  @id @default(autoincrement())
+  idProperty Int
+  idFile     Int
+  file       File @relation(fields: [idFile], references: [id])
+}
+
+model PropertyPhoto {
+  id         Int  @id @default(autoincrement())
+  idProperty Int
+  idFile     Int
+  file       File @relation(fields: [idFile], references: [id])
+}
+
