@@ -1,4 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { CreateAddressDto } from './create-address.dto';
+import { CreatePropertyRentalPeriodDto } from './create-property-rental-period.dto';
 
 export class CreatePropertyDto {
   @ApiProperty({ description: 'ID do locador', example: 1 })
@@ -9,9 +11,6 @@ export class CreatePropertyDto {
 
   @ApiProperty({ description: 'Descrição da propriedade', example: 'Excelente localização...', required: false })
   description?: string;
-
-  @ApiProperty({ description: 'ID do endereço', example: 1 })
-  idAddress: number;
 
   @ApiProperty({ description: 'Altura em metros', example: 3.5 })
   height: number;
@@ -33,5 +32,21 @@ export class CreatePropertyDto {
 
   @ApiProperty({ description: 'URL do Google Maps', required: false })
   urlMaps?: string;
+
+  // Dados do endereço
+  @ApiProperty({ description: 'Dados do endereço', type: CreateAddressDto })
+  address: CreateAddressDto;
+
+  // Lista de IDs das características
+  @ApiProperty({ description: 'Lista de IDs das características', example: [1, 2, 3], type: [Number] })
+  featureIds: number[];
+
+  // Lista de IDs dos tipos de atividade
+  @ApiProperty({ description: 'Lista de IDs dos tipos de atividade', example: [1, 2], type: [Number] })
+  typeActivityIds: number[];
+
+  // Lista de períodos de aluguel
+  @ApiProperty({ description: 'Lista de períodos de aluguel', type: [CreatePropertyRentalPeriodDto] })
+  rentalPeriods: CreatePropertyRentalPeriodDto[];
 }
 

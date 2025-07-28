@@ -6,24 +6,21 @@ import { CreatePropertyRentalPeriodDto } from '../dto/create-property-rental-per
 export class PropertyRentalPeriodService {
   constructor(private prisma: PrismaService) {}
 
-  async create(createPropertyRentalPeriodDto: CreatePropertyRentalPeriodDto) {
+  async create(propertyId: number, createPropertyRentalPeriodDto: CreatePropertyRentalPeriodDto) {
     return this.prisma.didere.propertyRentalPeriod.create({
       data: {
-        idProperty: createPropertyRentalPeriodDto.idProperty,
-        startDate: createPropertyRentalPeriodDto.startDate,
-        endDate: createPropertyRentalPeriodDto.endDate,
-        startHour: createPropertyRentalPeriodDto.startHour,
-        endHour: createPropertyRentalPeriodDto.endHour,
-        sunday: createPropertyRentalPeriodDto.sunday,
-        monday: createPropertyRentalPeriodDto.monday,
-        tuesday: createPropertyRentalPeriodDto.tuesday,
-        wednesday: createPropertyRentalPeriodDto.wednesday,
-        thursday: createPropertyRentalPeriodDto.thursday,
-        friday: createPropertyRentalPeriodDto.friday,
-        saturday: createPropertyRentalPeriodDto.saturday,
-      },
-      include: {
-        property: true,
+        idProperty: propertyId,
+        startDate: new Date(createPropertyRentalPeriodDto.startDate),
+        endDate: new Date(createPropertyRentalPeriodDto.endDate),
+        startHour: createPropertyRentalPeriodDto.startHour || '00:00',
+        endHour: createPropertyRentalPeriodDto.endHour || '23:59',
+        sunday: createPropertyRentalPeriodDto.sunday || 'Y',
+        monday: createPropertyRentalPeriodDto.monday || 'Y',
+        tuesday: createPropertyRentalPeriodDto.tuesday || 'Y',
+        wednesday: createPropertyRentalPeriodDto.wednesday || 'Y',
+        thursday: createPropertyRentalPeriodDto.thursday || 'Y',
+        friday: createPropertyRentalPeriodDto.friday || 'Y',
+        saturday: createPropertyRentalPeriodDto.saturday || 'Y',
       },
     });
   }
@@ -87,9 +84,8 @@ export class PropertyRentalPeriodService {
     return this.prisma.didere.propertyRentalPeriod.update({
       where: { id },
       data: {
-        idProperty: updatePropertyRentalPeriodDto.idProperty,
-        startDate: updatePropertyRentalPeriodDto.startDate,
-        endDate: updatePropertyRentalPeriodDto.endDate,
+        startDate: updatePropertyRentalPeriodDto.startDate ? new Date(updatePropertyRentalPeriodDto.startDate) : undefined,
+        endDate: updatePropertyRentalPeriodDto.endDate ? new Date(updatePropertyRentalPeriodDto.endDate) : undefined,
         startHour: updatePropertyRentalPeriodDto.startHour,
         endHour: updatePropertyRentalPeriodDto.endHour,
         sunday: updatePropertyRentalPeriodDto.sunday,
@@ -114,8 +110,18 @@ export class PropertyRentalPeriodService {
 
   async createMultiple(idProperty: number, periods: CreatePropertyRentalPeriodDto[]) {
     const data = periods.map(period => ({
-      ...period,
       idProperty,
+      startDate: new Date(period.startDate),
+      endDate: new Date(period.endDate),
+      startHour: period.startHour || '00:00',
+      endHour: period.endHour || '23:59',
+      sunday: period.sunday || 'Y',
+      monday: period.monday || 'Y',
+      tuesday: period.tuesday || 'Y',
+      wednesday: period.wednesday || 'Y',
+      thursday: period.thursday || 'Y',
+      friday: period.friday || 'Y',
+      saturday: period.saturday || 'Y',
     }));
 
     return this.prisma.didere.propertyRentalPeriod.createMany({
@@ -129,5 +135,4 @@ export class PropertyRentalPeriodService {
     });
   }
 }
-
 

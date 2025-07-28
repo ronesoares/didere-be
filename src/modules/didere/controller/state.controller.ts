@@ -14,6 +14,7 @@ import { CreateStateDto } from '../dto/create-state.dto';
 import { UpdateStateDto } from '../dto/update-state.dto';
 import { JoiValidation } from '../../../common/decorators/joi-validation.decorator';
 import { createStateSchema, updateStateSchema } from '../../../common/schemas/state.schema';
+import { Public } from 'src/common/decorators/public.decorator';
 
 @ApiTags('states')
 @Controller('states')
@@ -29,6 +30,7 @@ export class StateController {
     return this.stateService.create(createStateDto);
   }
 
+  @Public()
   @Get()
   @ApiOperation({ summary: 'Get all states' })
   @ApiResponse({ status: 200, description: 'List of states.' })
@@ -36,6 +38,7 @@ export class StateController {
     return this.stateService.findAll(page, limit);
   }
 
+  @Public()
   @Get(':id')
   @ApiOperation({ summary: 'Get state by ID' })
   @ApiResponse({ status: 200, description: 'State found.' })

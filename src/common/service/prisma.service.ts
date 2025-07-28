@@ -46,4 +46,9 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
     await this.files.$disconnect();
     await this.didere.$disconnect();
   }
+
+  // Método para transações no banco didere
+  async $transaction<T>(fn: (prisma: DidereClient) => Promise<T>): Promise<T> {
+    return this.didere.$transaction(fn);
+  }
 }

@@ -14,6 +14,7 @@ import { CreateCityDto } from '../dto/create-city.dto';
 import { UpdateCityDto } from '../dto/update-city.dto';
 import { JoiValidation } from '../../../common/decorators/joi-validation.decorator';
 import { createCitySchema, updateCitySchema } from '../../../common/schemas/city.schema';
+import { Public } from 'src/common/decorators/public.decorator';
 
 @ApiTags('cities')
 @Controller('cities')
@@ -29,6 +30,7 @@ export class CityController {
     return this.cityService.create(createCityDto);
   }
 
+  @Public()
   @Get()
   @ApiOperation({ summary: 'Get all cities' })
   @ApiResponse({ status: 200, description: 'List of cities.' })
@@ -36,6 +38,7 @@ export class CityController {
     return this.cityService.findAll(page, limit, idState);
   }
 
+  @Public()
   @Get(':id')
   @ApiOperation({ summary: 'Get city by ID' })
   @ApiResponse({ status: 200, description: 'City found.' })

@@ -12,12 +12,14 @@ import { ClaimFormService } from '../service/claim-form.service';
 import { CreateClaimFormDto } from '../dto/create-claim-form.dto';
 import { JoiValidation } from '../../../common/decorators/joi-validation.decorator';
 import { createClaimFormSchema } from '../../../common/schemas/claim-form.schema';
+import { Public } from 'src/common/decorators/public.decorator';
 
 @ApiTags('claim-forms')
 @Controller('claim-forms')
 export class ClaimFormController {
   constructor(private readonly claimFormService: ClaimFormService) {}
 
+  @Public()
   @Post()
   @JoiValidation(createClaimFormSchema)
   @ApiOperation({ summary: 'Criar novo formulário de interesse' })

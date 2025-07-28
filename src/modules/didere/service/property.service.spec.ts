@@ -30,14 +30,29 @@ describe('PropertyService', () => {
   describe('create', () => {
     it('should create a property successfully', async () => {
       const createPropertyDto = {
-        title: 'A test property', 
-        height: 0, 
-        width: 0, 
-        depth: 0, 
-        value: 1000,
-        description: 'A test property',
         idLocator: 1,
-        idAddress: 1,
+        title: 'Test Property',
+        description: 'Test Description',
+        height: 3.5,
+        width: 10.0,
+        depth: 15.0,
+        value: 2500.00,
+        address: {
+          zipCode: '01234-567',
+          name: 'Rua Teste',
+          neighborhood: 'Centro',
+          number: 123,
+          idCity: 1,
+          idState: 1,
+        },
+        featureIds: [1, 2],
+        typeActivityIds: [1],
+        rentalPeriods: [{
+          startDate: '2024-01-01',
+          endDate: '2024-12-31',
+          startHour: '08:00',
+          endHour: '18:00',
+        }],
       };
       const createdProperty = { id: 1, ...createPropertyDto };
 

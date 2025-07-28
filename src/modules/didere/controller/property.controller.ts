@@ -89,10 +89,10 @@ export class PropertyController {
     @Param('id', ParseIntPipe) propertyId: number,
     @Body() createPropertyRentalPeriodDto: CreatePropertyRentalPeriodDto,
   ) {
-    return this.propertyRentalPeriodService.create({
-      ...createPropertyRentalPeriodDto,
-      idProperty: propertyId,
-    });
+    return this.propertyRentalPeriodService.create(
+      propertyId,
+      createPropertyRentalPeriodDto
+    );
   }
 
   @Public()
