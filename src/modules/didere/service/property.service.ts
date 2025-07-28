@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../common/service/prisma.service';
 import { CreatePropertyDto } from '../dto/create-property.dto';
 import { UpdatePropertyDto } from '../dto/update-property.dto';
+import { SearchPropertyDto } from '../dto/search-property.dto';
+import { PropertySearchResultDto } from '../dto/property-search-result.dto';
 
 @Injectable()
 export class PropertyService {
@@ -576,6 +578,237 @@ export class PropertyService {
     );
 
     return propertiesWithFiles;
+  }
+
+  async publicSearch(searchDto: SearchPropertyDto): Promise<PropertySearchResultDto[]> {
+    // Construir a query base
+    const whereConditions: any = {};
+    const joins: any = {
+      address: {
+        include: {
+          city: {
+            include: {
+              state: true,
+            },
+          },
+        },
+      },
+      propertyFeatures: {
+        include: {
+          feature: true,
+        },
+      },
+      propertyTypeActivities: {
+        include: {
+          typeActivity: true,
+        },
+      },
+      propertyRentalPeriods: true,
+    };
+
+    // Filtros de texto
+    if (searchDto.titleContains) {
+      whereConditions.OR = [
+        { title: { contains: searchDto.titleContains } },
+        { description: { contains: searchDto.titleContains } },
+      ];
+    }
+
+    // Filtros de dimensões
+    if (searchDto.heightGreaterThan !== undefined) {
+      whereConditions.height = { ...whereConditions.height, gte: searchDto.heightGreaterThan };
+    }
+    if (searchDto.heightLessThan !== undefined) {
+      whereConditions.height = { ...whereConditions.height, lte: searchDto.heightLessThan };
+    }
+    if (searchDto.widthGreaterThan !== undefined) {
+      whereConditions.width = { ...whereConditions.width, gte: searchDto.widthGreaterThan };
+    }
+    if (searchDto.widthLessThan !== undefined) {
+      whereConditions.width = { ...whereConditions.width, lte: searchDto.widthLessThan };
+    }
+    if (searchDto.depthGreaterThan !== undefined) {
+      whereConditions.depth = { ...whereConditions.depth, gte: searchDto.depthGreaterThan };
+    }
+    if (searchDto.depthLessThan !== undefined) {
+      whereConditions.depth = { ...whereConditions.depth, lte: searchDto.depthLessThan };
+    }
+
+    // Filtros de valor
+    if (searchDto.valueGreaterThan !== undefined) {
+      whereConditions.value = { ...whereConditions.value, gte: searchDto.valueGreaterThan };
+    }
+    if (searchDto.valueLessThan !== undefined) {
+      whereConditions.value = { ...whereConditions.value, lte: searchDto.valueLessThan };
+    }
+
+    // Filtros de periodicidade
+    if (searchDto.periodicityList && searchDto.periodicityList.length > 0) {
+      whereConditions.periodicity = { in: searchDto.periodicityList };
+    }
+
+    // Filtros de endereço
+    const addressConditions: any = {};
+    if (searchDto.idCity) {
+      addressConditions.idCity = searchDto.idCity;
+    }
+    if (searchDto.idState) {
+      addressConditions.idState = searchDto.idState;
+    }
+    if (searchDto.neighborhoodContains) {
+      addressConditions.neighborhood = { contains: searchDto.neighborhoodContains };
+    }
+    if (Object.keys(addressConditions).length > 0) {
+      whereConditions.address = addressConditions;
+    }
+
+    // Filtros de features
+    if (searchDto.featureList && searchDto.featureList.length > 0) {
+      whereConditions.propertyFeatures = {
+        some: {
+          idFeature: { in: searchDto.featureList },
+        },
+      };
+    }
+
+    // Filtros de type activities
+    if (searchDto.typeActivityList && searchDto.typeActivityList.length > 0) {
+      whereConditions.propertyTypeActivities = {
+        some: {
+          idTypeActivity: { in: searchDto.typeActivityList },
+        },
+      };
+    }
+
+    // Filtros de período de aluguel
+    const rentalPeriodConditions: any = {};
+    const currentDate = new Date();
+    
+    // Se onlyActive for 'Y', filtrar apenas períodos ativos
+    if (searchDto.onlyActive === 'Y') {
+      rentalPeriodConditions.endDate = { gte: currentDate };
+    }
+
+    // Filtros de data
+    if (searchDto.startDate) {
+      const startDate = new Date(searchDto.startDate);
+      rentalPeriodConditions.AND = [
+        { startDate: { lte: startDate } },
+        { endDate: { gte: startDate } },
+      ];
+    }
+    if (searchDto.endDate) {
+      const endDate = new Date(searchDto.endDate);
+      if (!rentalPeriodConditions.AND) {
+        rentalPeriodConditions.AND = [];
+      }
+      rentalPeriodConditions.AND.push(
+        { startDate: { lte: endDate } },
+        { endDate: { gte: endDate } }
+      );
+    }
+
+    // Filtros de hora
+    if (searchDto.startHour) {
+      rentalPeriodConditions.startHour = { lte: searchDto.startHour };
+      rentalPeriodConditions.endHour = { gte: searchDto.startHour };
+    }
+    if (searchDto.endHour) {
+      if (!rentalPeriodConditions.startHour) {
+        rentalPeriodConditions.startHour = {};
+      }
+      if (!rentalPeriodConditions.endHour) {
+        rentalPeriodConditions.endHour = {};
+      }
+      rentalPeriodConditions.startHour = { ...rentalPeriodConditions.startHour, lte: searchDto.endHour };
+      rentalPeriodConditions.endHour = { ...rentalPeriodConditions.endHour, gte: searchDto.endHour };
+    }
+
+    if (Object.keys(rentalPeriodConditions).length > 0) {
+      whereConditions.propertyRentalPeriods = {
+        some: rentalPeriodConditions,
+      };
+    }
+
+    // Buscar propriedades
+    const properties = await this.prisma.didere.property.findMany({
+      where: whereConditions,
+      include: joins,
+      orderBy: { id: 'desc' },
+    });
+
+    // Transformar os resultados no formato esperado
+    const results: PropertySearchResultDto[] = properties.map(property => {
+      // Formatar periodicidade
+      let periodicityText = '';
+      switch (property.periodicity) {
+        case 'H':
+          periodicityText = 'Hora';
+          break;
+        case 'D':
+          periodicityText = 'Dia';
+          break;
+        case 'S':
+          periodicityText = 'Semana';
+          break;
+        case 'M':
+          periodicityText = 'Mês';
+          break;
+        default:
+          periodicityText = '';
+      }
+
+      // Concatenar features
+      const features = property.propertyFeatures
+        .map(pf => pf.feature.name)
+        .sort()
+        .join('; ');
+
+      // Concatenar type activities
+      const typeActivities = property.propertyTypeActivities
+        .map(pt => pt.typeActivity.name)
+        .sort()
+        .join('; ');
+
+      // Formatar períodos de aluguel - usando type assertion para corrigir o tipo
+      const currentDate = new Date();
+      const rentalPeriods = property.propertyRentalPeriods as any[];
+      const activePeriods = rentalPeriods
+        .filter(period => new Date(period.endDate) >= currentDate)
+        .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
+
+      const rentalPeriod = activePeriods
+        .map(period => {
+          const startDate = new Date(period.startDate).toLocaleDateString('pt-BR');
+          const endDate = new Date(period.endDate).toLocaleDateString('pt-BR');
+          return `De ${startDate} até ${endDate} - entre ${period.startHour} e ${period.endHour}`;
+        })
+        .join('; ');
+
+      // Usando type assertion para acessar as propriedades do address
+      const address = property.address as any;
+
+      return {
+        id: property.id,
+        title: property.title,
+        description: property.description,
+        urlMaps: property.urlMaps,
+        height: Number(property.height),
+        width: Number(property.width),
+        depth: Number(property.depth),
+        periodicity: periodicityText,
+        value: Number(property.value),
+        neighborhood: address.neighborhood,
+        city: address.city.name,
+        state: address.city.state.abbreviation,
+        photo: property.mainPhoto,
+        features,
+        typeActivities,
+        rentalPeriod,
+      };
+    });
+
+    return results;
   }
 }
 

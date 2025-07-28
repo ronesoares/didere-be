@@ -19,6 +19,8 @@ import { UpdatePropertyDto } from '../dto/update-property.dto';
 import { CreatePropertyRentalPeriodDto } from '../dto/create-property-rental-period.dto';
 import { CreatePropertyFeatureDto } from '../dto/create-property-feature.dto';
 import { CreatePropertyTypeActivityDto } from '../dto/create-property-type-activity.dto';
+import { SearchPropertyDto } from '../dto/search-property.dto';
+import { PropertySearchResultDto } from '../dto/property-search-result.dto';
 import { JoiValidation } from '../../../common/decorators/joi-validation.decorator';
 import { createPropertySchema, updatePropertySchema } from '../../../common/schemas/property.schema';
 import { Public } from '../../../common/decorators/public.decorator';
@@ -42,14 +44,46 @@ export class PropertyController {
     return this.propertyService.create(createPropertyDto);
   }
 
-  @Public()
   @Get()
+  @ApiBearerAuth('bearer')
   @ApiOperation({ summary: 'Get all properties (Public)' })
   @ApiResponse({ status: 200, description: 'List of properties.' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   findAll(@Query('page') page?: number, @Query('limit') limit?: number) {
     return this.propertyService.findAll();
+  }
+
+  @Public()
+  @Get('search/public')
+  @ApiOperation({ summary: 'Public search for properties with filters' })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'List of properties matching search criteria.',
+    type: [PropertySearchResultDto]
+  })
+  @ApiQuery({ name: 'idCity', required: false, type: Number, description: 'ID da cidade' })
+  @ApiQuery({ name: 'idState', required: false, type: Number, description: 'ID do estado' })
+  @ApiQuery({ name: 'titleContains', required: false, type: String, description: 'Texto para buscar no título ou descrição' })
+  @ApiQuery({ name: 'neighborhoodContains', required: false, type: String, description: 'Texto para buscar no bairro' })
+  @ApiQuery({ name: 'heightGreaterThan', required: false, type: Number, description: 'Altura mínima' })
+  @ApiQuery({ name: 'heightLessThan', required: false, type: Number, description: 'Altura máxima' })
+  @ApiQuery({ name: 'widthGreaterThan', required: false, type: Number, description: 'Largura mínima' })
+  @ApiQuery({ name: 'widthLessThan', required: false, type: Number, description: 'Largura máxima' })
+  @ApiQuery({ name: 'depthGreaterThan', required: false, type: Number, description: 'Profundidade mínima' })
+  @ApiQuery({ name: 'depthLessThan', required: false, type: Number, description: 'Profundidade máxima' })
+  @ApiQuery({ name: 'valueGreaterThan', required: false, type: Number, description: 'Valor mínimo' })
+  @ApiQuery({ name: 'valueLessThan', required: false, type: Number, description: 'Valor máximo' })
+  @ApiQuery({ name: 'startDate', required: false, type: String, description: 'Data de início (YYYY-MM-DD)' })
+  @ApiQuery({ name: 'endDate', required: false, type: String, description: 'Data de fim (YYYY-MM-DD)' })
+  @ApiQuery({ name: 'startHour', required: false, type: String, description: 'Hora de início (HH:mm)' })
+  @ApiQuery({ name: 'endHour', required: false, type: String, description: 'Hora de fim (HH:mm)' })
+  @ApiQuery({ name: 'periodicityList', required: false, type: [String], description: 'Lista de periodicidades (H,D,S,M)' })
+  @ApiQuery({ name: 'featureList', required: false, type: [Number], description: 'Lista de IDs de características' })
+  @ApiQuery({ name: 'typeActivityList', required: false, type: [Number], description: 'Lista de IDs de tipos de atividade' })
+  @ApiQuery({ name: 'onlyActive', required: false, type: String, description: 'Filtrar apenas períodos ativos (Y/N)', enum: ['Y', 'N'] })
+  publicSearch(@Query() searchDto: SearchPropertyDto): Promise<PropertySearchResultDto[]> {
+    return this.propertyService.publicSearch(searchDto);
   }
 
   @Public()

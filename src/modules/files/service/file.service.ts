@@ -2,10 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../common/service/prisma.service';
 import { CreateFileDto } from '../dto/create-file.dto';
 import { UpdateFileDto } from '../dto/update-file.dto';
+import { FtpService } from './ftp.service';
 
 @Injectable()
 export class FileService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, private readonly ftpService: FtpService) {}
 
   async create(createFileDto: CreateFileDto) {
     return this.prisma.files.file.create({
@@ -82,12 +83,7 @@ export class FileService {
     });
   }
 
-  async downloadFile(id: number): Promise<Buffer> {
-    const file = await this.findOne(id);
-    
-    // Here you would implement the actual file download logic
-    // This could involve downloading from FTP, S3, local filesystem, etc.
-    // For now, returning a placeholder buffer
-    return Buffer.from(`File content for ${file.name}`);
+  async downloadFile(file: any): Promise<Buffer> {
+    return this.ftpService.downloadFile(file.idOwner + '/' + file.id.toString() + '.' + file.type);
   }
 }

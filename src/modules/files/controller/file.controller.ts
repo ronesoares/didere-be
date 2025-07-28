@@ -8,7 +8,8 @@ import {
   Delete,
   Query,
   ParseIntPipe,
-  Res,
+  StreamableFile,
+  Header,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
 import { Response } from 'express';
@@ -65,20 +66,19 @@ export class FileController {
 
   @Public()
   @Get(':id/download')
+  @Header('Content-Type', 'application/octet-stream')
   @ApiOperation({ summary: 'Download de arquivo (Público)' })
   @ApiResponse({ status: 200, description: 'Arquivo baixado com sucesso.' })
   @ApiResponse({ status: 404, description: 'Arquivo não encontrado.' })
-  async download(@Param('id', ParseIntPipe) id: number, @Res() res: Response) {
+  async download(@Param('id', ParseIntPipe) id: number): Promise<StreamableFile> {
     const file = await this.fileService.findOne(id);
-    const fileBuffer = await this.fileService.downloadFile(id);
+    const fileBuffer = await this.fileService.downloadFile(file);
     
-    res.set({
-      'Content-Type': file.type || 'application/octet-stream',
-      'Content-Disposition': `attachment; filename="${file.name}"`,
-      'Content-Length': fileBuffer.length,
+    return new StreamableFile(fileBuffer, {
+      type: file.type || 'application/octet-stream',
+      disposition: `attachment; filename="${file.name}"`,
+      length: fileBuffer.length,
     });
-    
-    res.send(fileBuffer);
   }
 
   @Patch(':id')
